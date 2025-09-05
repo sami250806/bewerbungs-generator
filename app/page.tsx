@@ -1,4 +1,6 @@
+cat > app/page.tsx <<'TSX'
 "use client";
+import type React from "react";
 import { useState, useEffect, FormEvent, useMemo } from "react";
 
 // =====================
@@ -17,7 +19,6 @@ type LetterStyle =
   | "persuasive";
 
 type Language = "de" | "en";
-
 type LengthTarget = "short" | "medium" | "long";
 
 type FormState = {
@@ -261,6 +262,13 @@ export default function Home() {
       localStorage.setItem("bg_form", JSON.stringify(form));
     } catch {}
   }, [form]);
+
+  // Auto-scroll zur Vorschau, sobald Text fertig ist
+  useEffect(() => {
+    if (!loading && result) {
+      document.getElementById("preview")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [loading, result]);
 
   // Labels
   const t = i18n[form.language];
@@ -507,426 +515,426 @@ export default function Home() {
   // Render
   // =====================
   return (
-  <>
-    {loading && (
-      <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500/10 border-b border-yellow-500/30 backdrop-blur px-4 py-2 text-center text-sm">
-        <span className="font-medium">Generierung läuft…</span> Bitte warten.
-      </div>
-    )}
-  </>
-<div className="min-h-screen bg-gradient-to-b from-indigo-900 via-slate-900 to-black text-white">
-      <main className="mx-auto max-w-5xl px-4 py-10">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">{t.appTitle}</h1>
-          <p className="mt-1 text-white/70">{t.intro}</p>
-        </header>
+    <>
+      {/* Loading-Bar */}
+      {loading && (
+        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500/10 border-b border-yellow-500/30 backdrop-blur px-4 py-2 text-center text-sm">
+          <span className="font-medium">Generierung läuft…</span> Bitte warten.
+        </div>
+      )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Form card */}
-          <section className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur">
-            <form onSubmit={handleSubmit} noValidate className="space-y-5">
-              {/* Language */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block font-medium" htmlFor="language">
-                    {t.labels.language}
-                  </label>
-                  <select
-                    id="language"
-                    value={form.language}
-                    onChange={onChange("language")}
-                    onBlur={onBlur("language")}
-                    className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
-                  >
-                    <option value="en">English</option>
-                    <option value="de">Deutsch</option>
-                  </select>
-                </div>
+      <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-slate-900 to-black text-white">
+        <main className="mx-auto max-w-5xl px-4 py-10">
+          <header className="mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">{i18n[form.language].appTitle}</h1>
+            <p className="mt-1 text-white/70">{i18n[form.language].intro}</p>
+          </header>
 
-                {/* Style */}
-                <div>
-                  <label className="mb-1 block font-medium" htmlFor="style">
-                    {t.labels.style}
-                  </label>
-                  <select
-                    id="style"
-                    value={form.style}
-                    onChange={onChange("style")}
-                    onBlur={onBlur("style")}
-                    className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
-                  >
-                    <option value="formal">{t.styleOptions.formal}</option>
-                    <option value="modern">{t.styleOptions.modern}</option>
-                    <option value="friendly">{t.styleOptions.friendly}</option>
-                    <option value="concise">{t.styleOptions.concise}</option>
-                    <option value="enthusiastic">{t.styleOptions.enthusiastic}</option>
-                    <option value="professional">{t.styleOptions.professional}</option>
-                    <option value="casual">{t.styleOptions.casual}</option>
-                    <option value="sales">{t.styleOptions.sales}</option>
-                    <option value="academic">{t.styleOptions.academic}</option>
-                    <option value="persuasive">{t.styleOptions.persuasive}</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Length + toggles */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                <div>
-                  <label className="mb-1 block font-medium" htmlFor="length">
-                    {t.labels.length}
-                  </label>
-                  <select
-                    id="length"
-                    value={form.length}
-                    onChange={onChange("length")}
-                    onBlur={onBlur("length")}
-                    className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
-                  >
-                    <option value="short">{i18n[form.language].lengthOptions.short}</option>
-                    <option value="medium">{i18n[form.language].lengthOptions.medium}</option>
-                    <option value="long">{i18n[form.language].lengthOptions.long}</option>
-                  </select>
-                </div>
-
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={form.bullets}
-                    onChange={onChange("bullets")}
-                    onBlur={onBlur("bullets")}
-                    className="h-4 w-4 rounded border-white/30 bg-white/5"
-                  />
-                  <span>{t.labels.bullets}</span>
-                </label>
-
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={form.header}
-                    onChange={onChange("header")}
-                    onBlur={onBlur("header")}
-                    className="h-4 w-4 rounded border-white/30 bg-white/5"
-                  />
-                  <span>{t.labels.header}</span>
-                </label>
-              </div>
-
-              {/* Name + Job */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block font-medium" htmlFor="name">
-                    {t.labels.name}
-                  </label>
-                  <input
-                    id="name"
-                    type="text"
-                    value={form.name}
-                    onChange={onChange("name")}
-                    onBlur={onBlur("name")}
-                    className={fieldClasses(form.name, touched.name)}
-                    placeholder={i18n[form.language].placeholders.name}
-                  />
-                  {errorBelow(form.name, touched.name, t.labels.name)}
-                </div>
-                <div>
-                  <label className="mb-1 block font-medium" htmlFor="jobTitle">
-                    {t.labels.jobTitle}
-                  </label>
-                  <input
-                    id="jobTitle"
-                    type="text"
-                    value={form.jobTitle}
-                    onChange={onChange("jobTitle")}
-                    onBlur={onBlur("jobTitle")}
-                    className={fieldClasses(form.jobTitle, touched.jobTitle)}
-                    placeholder={i18n[form.language].placeholders.jobTitle}
-                  />
-                  {errorBelow(form.jobTitle, touched.jobTitle, t.labels.jobTitle)}
-                </div>
-              </div>
-
-              {/* Company + Contact */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block font-medium" htmlFor="company">
-                    {t.labels.company}
-                  </label>
-                  <input
-                    id="company"
-                    type="text"
-                    value={form.company}
-                    onChange={onChange("company")}
-                    onBlur={onBlur("company")}
-                    className={fieldClasses(form.company, touched.company)}
-                    placeholder={i18n[form.language].placeholders.company}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block font-medium" htmlFor="contact">
-                    {t.labels.contact}
-                  </label>
-                  <input
-                    id="contact"
-                    type="text"
-                    value={form.contact}
-                    onChange={onChange("contact")}
-                    onBlur={onBlur("contact")}
-                    className={fieldClasses(form.contact, touched.contact)}
-                    placeholder={i18n[form.language].placeholders.contact}
-                  />
-                </div>
-              </div>
-
-              {/* Header addresses */}
-              {form.header && (
-                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <label className="mb-1 block font-medium" htmlFor="applicantAddress">
-                        {t.labels.applicantAddress}
-                      </label>
-                      <textarea
-                        id="applicantAddress"
-                        rows={2}
-                        value={form.applicantAddress}
-                        onChange={onChange("applicantAddress")}
-                        onBlur={onBlur("applicantAddress")}
-                        className={fieldClasses(form.applicantAddress, touched.applicantAddress)}
-                        placeholder={i18n[form.language].placeholders.applicantAddress}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block font-medium" htmlFor="companyAddress">
-                        {t.labels.companyAddress}
-                      </label>
-                      <textarea
-                        id="companyAddress"
-                        rows={2}
-                        value={form.companyAddress}
-                        onChange={onChange("companyAddress")}
-                        onBlur={onBlur("companyAddress")}
-                        className={fieldClasses(form.companyAddress, touched.companyAddress)}
-                        placeholder={i18n[form.language].placeholders.companyAddress}
-                      />
-                    </div>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {/* Form card */}
+            <section className="lg:col-span-2 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur">
+              <form onSubmit={handleSubmit} noValidate className="space-y-5">
+                {/* Language & Style */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block font-medium" htmlFor="language">
+                      {i18n[form.language].labels.language}
+                    </label>
+                    <select
+                      id="language"
+                      value={form.language}
+                      onChange={onChange("language")}
+                      onBlur={onBlur("language")}
+                      className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
+                    >
+                      <option value="en">English</option>
+                      <option value="de">Deutsch</option>
+                    </select>
                   </div>
-                  <div className="mt-3">
-                    <label className="mb-1 block font-medium" htmlFor="applicantLocation">
-                      {t.labels.applicantLocation}
+
+                  <div>
+                    <label className="mb-1 block font-medium" htmlFor="style">
+                      {i18n[form.language].labels.style}
+                    </label>
+                    <select
+                      id="style"
+                      value={form.style}
+                      onChange={onChange("style")}
+                      onBlur={onBlur("style")}
+                      className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
+                    >
+                      <option value="formal">{i18n[form.language].styleOptions.formal}</option>
+                      <option value="modern">{i18n[form.language].styleOptions.modern}</option>
+                      <option value="friendly">{i18n[form.language].styleOptions.friendly}</option>
+                      <option value="concise">{i18n[form.language].styleOptions.concise}</option>
+                      <option value="enthusiastic">{i18n[form.language].styleOptions.enthusiastic}</option>
+                      <option value="professional">{i18n[form.language].styleOptions.professional}</option>
+                      <option value="casual">{i18n[form.language].styleOptions.casual}</option>
+                      <option value="sales">{i18n[form.language].styleOptions.sales}</option>
+                      <option value="academic">{i18n[form.language].styleOptions.academic}</option>
+                      <option value="persuasive">{i18n[form.language].styleOptions.persuasive}</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Length + toggles */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block font-medium" htmlFor="length">
+                      {i18n[form.language].labels.length}
+                    </label>
+                    <select
+                      id="length"
+                      value={form.length}
+                      onChange={onChange("length")}
+                      onBlur={onBlur("length")}
+                      className="w-full rounded-xl border border-white/20 bg-white/5 px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
+                    >
+                      <option value="short">{i18n[form.language].lengthOptions.short}</option>
+                      <option value="medium">{i18n[form.language].lengthOptions.medium}</option>
+                      <option value="long">{i18n[form.language].lengthOptions.long}</option>
+                    </select>
+                  </div>
+
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={form.bullets}
+                      onChange={onChange("bullets")}
+                      onBlur={onBlur("bullets")}
+                      className="h-4 w-4 rounded border-white/30 bg-white/5"
+                    />
+                    <span>{i18n[form.language].labels.bullets}</span>
+                  </label>
+
+                  <label className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={form.header}
+                      onChange={onChange("header")}
+                      onBlur={onBlur("header")}
+                      className="h-4 w-4 rounded border-white/30 bg-white/5"
+                    />
+                    <span>{i18n[form.language].labels.header}</span>
+                  </label>
+                </div>
+
+                {/* Name + Job */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block font-medium" htmlFor="name">
+                      {i18n[form.language].labels.name}
                     </label>
                     <input
-                      id="applicantLocation"
+                      id="name"
                       type="text"
-                      value={form.applicantLocation}
-                      onChange={onChange("applicantLocation")}
-                      onBlur={onBlur("applicantLocation")}
-                      className={fieldClasses(form.applicantLocation, touched.applicantLocation)}
-                      placeholder={i18n[form.language].placeholders.applicantLocation}
+                      value={form.name}
+                      onChange={onChange("name")}
+                      onBlur={onBlur("name")}
+                      className={fieldClasses(form.name, touched.name)}
+                      placeholder={i18n[form.language].placeholders.name}
+                    />
+                    {errorBelow(form.name, touched.name, i18n[form.language].labels.name)}
+                  </div>
+                  <div>
+                    <label className="mb-1 block font-medium" htmlFor="jobTitle">
+                      {i18n[form.language].labels.jobTitle}
+                    </label>
+                    <input
+                      id="jobTitle"
+                      type="text"
+                      value={form.jobTitle}
+                      onChange={onChange("jobTitle")}
+                      onBlur={onBlur("jobTitle")}
+                      className={fieldClasses(form.jobTitle, touched.jobTitle)}
+                      placeholder={i18n[form.language].placeholders.jobTitle}
+                    />
+                    {errorBelow(form.jobTitle, touched.jobTitle, i18n[form.language].labels.jobTitle)}
+                  </div>
+                </div>
+
+                {/* Company + Contact */}
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block font-medium" htmlFor="company">
+                      {i18n[form.language].labels.company}
+                    </label>
+                    <input
+                      id="company"
+                      type="text"
+                      value={form.company}
+                      onChange={onChange("company")}
+                      onBlur={onBlur("company")}
+                      className={fieldClasses(form.company, touched.company)}
+                      placeholder={i18n[form.language].placeholders.company}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block font-medium" htmlFor="contact">
+                      {i18n[form.language].labels.contact}
+                    </label>
+                    <input
+                      id="contact"
+                      type="text"
+                      value={form.contact}
+                      onChange={onChange("contact")}
+                      onBlur={onBlur("contact")}
+                      className={fieldClasses(form.contact, touched.contact)}
+                      placeholder={i18n[form.language].placeholders.contact}
                     />
                   </div>
                 </div>
-              )}
 
-              {/* Experience */}
-              <div>
-                <label className="mb-1 block font-medium" htmlFor="experience">
-                  {t.labels.experience}
-                </label>
-                <textarea
-                  id="experience"
-                  rows={6}
-                  value={form.experience}
-                  onChange={onChange("experience")}
-                  onBlur={onBlur("experience")}
-                  className={fieldClasses(form.experience, touched.experience)}
-                  placeholder={i18n[form.language].placeholders.experience}
-                />
-                {errorBelow(form.experience, touched.experience, t.labels.experience)}
+                {/* Header addresses */}
+                {form.header && (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1 block font-medium" htmlFor="applicantAddress">
+                          {i18n[form.language].labels.applicantAddress}
+                        </label>
+                        <textarea
+                          id="applicantAddress"
+                          rows={2}
+                          value={form.applicantAddress}
+                          onChange={onChange("applicantAddress")}
+                          onBlur={onBlur("applicantAddress")}
+                          className={fieldClasses(form.applicantAddress, touched.applicantAddress)}
+                          placeholder={i18n[form.language].placeholders.applicantAddress}
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1 block font-medium" htmlFor="companyAddress">
+                          {i18n[form.language].labels.companyAddress}
+                        </label>
+                        <textarea
+                          id="companyAddress"
+                          rows={2}
+                          value={form.companyAddress}
+                          onChange={onChange("companyAddress")}
+                          onBlur={onBlur("companyAddress")}
+                          className={fieldClasses(form.companyAddress, touched.companyAddress)}
+                          placeholder={i18n[form.language].placeholders.companyAddress}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <label className="mb-1 block font-medium" htmlFor="applicantLocation">
+                        {i18n[form.language].labels.applicantLocation}
+                      </label>
+                      <input
+                        id="applicantLocation"
+                        type="text"
+                        value={form.applicantLocation}
+                        onChange={onChange("applicantLocation")}
+                        onBlur={onBlur("applicantLocation")}
+                        className={fieldClasses(form.applicantLocation, touched.applicantLocation)}
+                        placeholder={i18n[form.language].placeholders.applicantLocation}
+                      />
+                    </div>
+                  </div>
+                )}
 
-                {/* Counters */}
-                <div className="mt-1 flex items-center justify-between text-xs">
-                  <span className="text-white/60">{t.counters.chars}: {countChars(form.experience)}</span>
-                  <span className={statColor(expWords, LIMITS.experience)}>
-                    {t.counters.words}: {expWords}{" "}
-                    <span className="text-white/50">
-                      ({t.counters.target(LIMITS.experience.minWords, LIMITS.experience.maxWords)})
-                    </span>
-                  </span>
-                </div>
-                <div className="mt-1 h-2 w-full rounded-full bg-white/10">
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${barColor(expWords, LIMITS.experience)}`}
-                    style={{ width: `${percentToGoal(expWords, LIMITS.experience)}%` }}
+                {/* Experience */}
+                <div>
+                  <label className="mb-1 block font-medium" htmlFor="experience">
+                    {i18n[form.language].labels.experience}
+                  </label>
+                  <textarea
+                    id="experience"
+                    rows={6}
+                    value={form.experience}
+                    onChange={onChange("experience")}
+                    onBlur={onBlur("experience")}
+                    className={fieldClasses(form.experience, touched.experience)}
+                    placeholder={i18n[form.language].placeholders.experience}
                   />
-                </div>
-              </div>
+                  {errorBelow(form.experience, touched.experience, i18n[form.language].labels.experience)}
 
-              {/* Skills */}
-              <div>
-                <label className="mb-1 block font-medium" htmlFor="skills">
-                  {t.labels.skills}
-                </label>
-                <textarea
-                  id="skills"
-                  rows={4}
-                  value={form.skills}
-                  onChange={onChange("skills")}
-                  onBlur={onBlur("skills")}
-                  className={fieldClasses(form.skills, touched.skills)}
-                  placeholder={i18n[form.language].placeholders.skills}
-                />
-                {errorBelow(form.skills, touched.skills, t.labels.skills)}
-
-                {/* Counters */}
-                <div className="mt-1 flex items-center justify-between text-xs">
-                  <span className="text-white/60">{t.counters.chars}: {countChars(form.skills)}</span>
-                  <span className={statColor(skillsWords, LIMITS.skills)}>
-                    {t.counters.words}: {skillsWords}{" "}
-                    <span className="text-white/50">
-                      ({t.counters.target(LIMITS.skills.minWords, LIMITS.skills.maxWords)})
+                  {/* Counters */}
+                  <div className="mt-1 flex items-center justify-between text-xs">
+                    <span className="text-white/60">{i18n[form.language].counters.chars}: {countChars(form.experience)}</span>
+                    <span className={statColor(expWords, LIMITS.experience)}>
+                      {i18n[form.language].counters.words}: {expWords}{" "}
+                      <span className="text-white/50">
+                        ({i18n[form.language].counters.target(LIMITS.experience.minWords, LIMITS.experience.maxWords)})
+                      </span>
                     </span>
-                  </span>
+                  </div>
+                  <div className="mt-1 h-2 w-full rounded-full bg-white/10">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${barColor(expWords, LIMITS.experience)}`}
+                      style={{ width: `${percentToGoal(expWords, LIMITS.experience)}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="mt-1 h-2 w-full rounded-full bg-white/10">
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${barColor(skillsWords, LIMITS.skills)}`}
-                    style={{ width: `${percentToGoal(skillsWords, LIMITS.skills)}%` }}
+
+                {/* Skills */}
+                <div>
+                  <label className="mb-1 block font-medium" htmlFor="skills">
+                    {i18n[form.language].labels.skills}
+                  </label>
+                  <textarea
+                    id="skills"
+                    rows={4}
+                    value={form.skills}
+                    onChange={onChange("skills")}
+                    onBlur={onBlur("skills")}
+                    className={fieldClasses(form.skills, touched.skills)}
+                    placeholder={i18n[form.language].placeholders.skills}
                   />
+                  {errorBelow(form.skills, touched.skills, i18n[form.language].labels.skills)}
+
+                  {/* Counters */}
+                  <div className="mt-1 flex items-center justify-between text-xs">
+                    <span className="text-white/60">{i18n[form.language].counters.chars}: {countChars(form.skills)}</span>
+                    <span className={statColor(skillsWords, LIMITS.skills)}>
+                      {i18n[form.language].counters.words}: {skillsWords}{" "}
+                      <span className="text-white/50">
+                        ({i18n[form.language].counters.target(LIMITS.skills.minWords, LIMITS.skills.maxWords)})
+                      </span>
+                    </span>
+                  </div>
+                  <div className="mt-1 h-2 w-full rounded-full bg-white/10">
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${barColor(skillsWords, LIMITS.skills)}`}
+                      style={{ width: `${percentToGoal(skillsWords, LIMITS.skills)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  {/* Generate */}
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${
+                      loading ? "bg-white/30 cursor-wait" : "bg-indigo-600 hover:bg-indigo-500"
+                    }`}
+                  >
+                    {loading ? i18n[form.language].buttons.generating : i18n[form.language].buttons.generate}
+                  </button>
+
+                  {/* PDF */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!result) return;
+                      const { default: jsPDF } = await import("jspdf");
+                      const doc = new jsPDF();
+                      doc.setFontSize(12);
+                      doc.text(result, 20, 20, { maxWidth: 170 });
+                      doc.save(form.language === "en" ? "CoverLetter.pdf" : "Bewerbung.pdf");
+                    }}
+                    disabled={!result}
+                    className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${
+                      result ? "bg-green-600 hover:bg-green-500" : "bg-white/30 cursor-not-allowed"
+                    }`}
+                  >
+                    {i18n[form.language].buttons.pdf}
+                  </button>
+
+                  {/* DOCX */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!result) return;
+                      const docx = await import("docx");
+                      const { Document, Packer, Paragraph, TextRun } = docx as any;
+
+                      const paragraphs = result
+                        .trim()
+                        .split(/\n{2,}/)
+                        .map((block: string) => {
+                          const lines = block.split("\n");
+                          const runs = lines.map((line, i) => (i === 0 ? new TextRun(line) : new TextRun({ text: line, break: 1 })));
+                          return new Paragraph({ children: runs });
+                        });
+
+                      const doc = new Document({ sections: [{ properties: {}, children: paragraphs }] });
+
+                      const blob = await Packer.toBlob(doc);
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = form.language === "en" ? "CoverLetter.docx" : "Bewerbung.docx";
+                      document.body.appendChild(a);
+                      a.click();
+                      a.remove();
+                      URL.revokeObjectURL(url);
+                    }}
+                    disabled={!result}
+                    className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${
+                      result ? "bg-blue-600 hover:bg-blue-500" : "bg-white/30 cursor-not-allowed"
+                    }`}
+                  >
+                    {i18n[form.language].buttons.docx}
+                  </button>
+
+                  {/* Reset */}
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="rounded-xl border border-white/20 px-4 py-2 font-medium backdrop-blur hover:bg-white/10 sm:flex-1"
+                  >
+                    {i18n[form.language].buttons.reset}
+                  </button>
+                </div>
+              </form>
+            </section>
+
+            {/* Tips / Examples sidebar */}
+            <aside className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur">
+              <h3 className="mb-3 text-lg font-semibold">{i18n[form.language].labels.tips}</h3>
+              <ul className="list-disc space-y-2 pl-5 text-sm text-white/80">
+                <li>{form.language === "en" ? "Use measurable results (e.g., time saved, error rate reduced)." : "Nutze messbare Ergebnisse (z. B. Zeitersparnis, Fehlerquote gesenkt)."}</li>
+                <li>{form.language === "en" ? "Mirror keywords from the job ad for ATS." : "Übernimm Keywords aus der Stellenausschreibung (ATS)."}</li>
+                <li>{form.language === "en" ? "Keep paragraphs short and focused." : "Halte Absätze kurz und fokussiert."}</li>
+                <li>{form.language === "en" ? "Prefer active voice (" : "Nutze Aktiv statt Passiv ("}{form.language === "en" ? "I implemented" : "Ich habe umgesetzt"}{")"}</li>
+              </ul>
+
+              <h3 className="mb-2 mt-6 text-lg font-semibold">{i18n[form.language].labels.examples}</h3>
+              <div className="space-y-2 text-sm text-white/70">
+                <div className="rounded-lg border border-white/10 p-3">
+                  <p className="font-medium">Achievement</p>
+                  <p>{form.language === "en" ? "Reduced processing time by 35% by streamlining the intake process and automating recurring steps." : "Bearbeitungszeit um 35% reduziert, indem ich den Intake-Prozess verschlankt und wiederkehrende Schritte automatisiert habe."}</p>
+                </div>
+                <div className="rounded-lg border border-white/10 p-3">
+                  <p className="font-medium">Customer Impact</p>
+                  <p>{form.language === "en" ? "Raised CSAT from 4.2 to 4.7 through proactive follow-ups and standardized responses." : "CSAT von 4,2 auf 4,7 gesteigert durch proaktive Follow-ups und standardisierte Antworten."}</p>
                 </div>
               </div>
+            </aside>
+          </div>
 
-              {/* Buttons */}
-              <div className="flex flex-col gap-3 sm:flex-row">
-                {/* Generate */}
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${
-                    loading ? "bg-white/30 cursor-wait" : "bg-indigo-600 hover:bg-indigo-500"
-                  }`}
-                >
-                  {loading ? i18n[form.language].buttons.generating : i18n[form.language].buttons.generate}
-                </button>
-
-                {/* PDF */}
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!result) return;
-                    const { default: jsPDF } = await import("jspdf");
-                    const doc = new jsPDF();
-                    doc.setFontSize(12);
-                    doc.text(result, 20, 20, { maxWidth: 170 });
-                    doc.save(form.language === "en" ? "CoverLetter.pdf" : "Bewerbung.pdf");
-                  }}
-                  disabled={!result}
-                  className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${
-                    result ? "bg-green-600 hover:bg-green-500" : "bg-white/30 cursor-not-allowed"
-                  }`}
-                >
-                  {i18n[form.language].buttons.pdf}
-                </button>
-
-                {/* DOCX */}
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!result) return;
-                    const docx = await import("docx");
-                    const { Document, Packer, Paragraph, TextRun } = docx as any;
-
-                    const paragraphs = result
-                      .trim()
-                      .split(/\n{2,}/)
-                      .map((block: string) => {
-                        const lines = block.split("\n");
-                        const runs = lines.map((line, i) => (i === 0 ? new TextRun(line) : new TextRun({ text: line, break: 1 })));
-                        return new Paragraph({ children: runs });
-                      });
-
-                    const doc = new Document({ sections: [{ properties: {}, children: paragraphs }] });
-
-                    const blob = await Packer.toBlob(doc);
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = form.language === "en" ? "CoverLetter.docx" : "Bewerbung.docx";
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(url);
-                  }}
-                  disabled={!result}
-                  className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${
-                    result ? "bg-blue-600 hover:bg-blue-500" : "bg-white/30 cursor-not-allowed"
-                  }`}
-                >
-                  {i18n[form.language].buttons.docx}
-                </button>
-
-                {/* Reset */}
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="rounded-xl border border-white/20 px-4 py-2 font-medium backdrop-blur hover:bg-white/10 sm:flex-1"
-                >
-                  {i18n[form.language].buttons.reset}
-                </button>
+          {/* Preview */}
+          {result && (
+            <section id="preview" className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur">
+              <div className="mb-3 flex items-center justify-between gap-4">
+                <h2 className="text-xl font-semibold">{i18n[form.language].labels.preview}</h2>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-white/70">
+                    {i18n[form.language].counters.words}: {result.trim() ? result.trim().split(/\s+/).length : 0}
+                  </span>
+                  <button
+                    onClick={async () => { await navigator.clipboard.writeText(result); }}
+                    className="rounded-lg border border-white/20 px-3 py-1 text-sm hover:bg-white/10"
+                    title={i18n[form.language].buttons.copy}
+                  >
+                    {i18n[form.language].buttons.copy}
+                  </button>
+                </div>
               </div>
-            </form>
-          </section>
+              <pre className="whitespace-pre-wrap leading-relaxed text-white/90">{result}</pre>
+            </section>
+          )}
 
-          {/* Tips / Examples sidebar */}
-          <aside className="rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur">
-            <h3 className="mb-3 text-lg font-semibold">{t.labels.tips}</h3>
-            <ul className="list-disc space-y-2 pl-5 text-sm text-white/80">
-              <li>{form.language === "en" ? "Use measurable results (e.g., time saved, error rate reduced)." : "Nutze messbare Ergebnisse (z. B. Zeitersparnis, Fehlerquote gesenkt)."}</li>
-              <li>{form.language === "en" ? "Mirror keywords from the job ad for ATS." : "Übernimm Keywords aus der Stellenausschreibung (ATS)."}</li>
-              <li>{form.language === "en" ? "Keep paragraphs short and focused." : "Halte Absätze kurz und fokussiert."}</li>
-              <li>{form.language === "en" ? "Prefer active voice (" : "Nutze Aktiv statt Passiv ("}{form.language === "en" ? "I implemented" : "Ich habe umgesetzt"}{")"}</li>
-            </ul>
-
-            <h3 className="mb-2 mt-6 text-lg font-semibold">{t.labels.examples}</h3>
-            <div className="space-y-2 text-sm text-white/70">
-              <div className="rounded-lg border border-white/10 p-3">
-                <p className="font-medium">Achievement</p>
-                <p>{form.language === "en" ? "Reduced processing time by 35% by streamlining the intake process and automating recurring steps." : "Bearbeitungszeit um 35% reduziert, indem ich den Intake-Prozess verschlankt und wiederkehrende Schritte automatisiert habe."}</p>
-              </div>
-              <div className="rounded-lg border border-white/10 p-3">
-                <p className="font-medium">Customer Impact</p>
-                <p>{form.language === "en" ? "Raised CSAT from 4.2 to 4.7 through proactive follow-ups and standardized responses." : "CSAT von 4,2 auf 4,7 gesteigert durch proaktive Follow-ups und standardisierte Antworten."}</p>
-              </div>
-            </div>
-          </aside>
-        </div>
-
-        {/* Preview */}
-        {result && (
-          <section className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-xl backdrop-blur">
-            <div className="mb-3 flex items-center justify-between gap-4">
-              <h2 className="text-xl font-semibold">{i18n[form.language].labels.preview}</h2>
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-white/70">
-                  {i18n[form.language].counters.words}: {result.trim() ? result.trim().split(/\s+/).length : 0}
-                </span>
-                <button
-                  onClick={async () => {
-                    await navigator.clipboard.writeText(result);
-                  }}
-                  className="rounded-lg border border-white/20 px-3 py-1 text-sm hover:bg-white/10"
-                  title={i18n[form.language].buttons.copy}
-                >
-                  {i18n[form.language].buttons.copy}
-                </button>
-              </div>
-            </div>
-            <pre className="whitespace-pre-wrap leading-relaxed text-white/90">{result}</pre>
-          </section>
-        )}
-
-        {/* Fallback note */}
-        {errorMsg && <p className="mt-3 text-sm text-amber-300">{errorMsg}</p>}
-      </main>
-    </div>
+          {/* Fallback note */}
+          {errorMsg && <p className="mt-3 text-sm text-amber-300">{errorMsg}</p>}
+        </main>
+      </div>
+    </>
   );
 }
+TSX
