@@ -507,6 +507,11 @@ export default function Home() {
   // Render
   // =====================
   return (
+    {loading && (
+      <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-500/10 border-b border-yellow-500/30 backdrop-blur px-4 py-2 text-center text-sm">
+        <span className="font-medium">Generierung läuft…</span> Bitte warten.
+      </div>
+    )}
     <div className="min-h-screen bg-gradient-to-b from-indigo-900 via-slate-900 to-black text-white">
       <main className="mx-auto max-w-5xl px-4 py-10">
         <header className="mb-6">
