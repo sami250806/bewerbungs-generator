@@ -1,4 +1,3 @@
-cat > app/page.tsx <<'TSX'
 "use client";
 import type React from "react";
 import { useState, useEffect, FormEvent, useMemo } from "react";
@@ -937,4 +936,3 @@ export default function Home() {
     </>
   );
 }
-TSX
