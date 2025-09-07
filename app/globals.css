@@ -1,28 +1,78 @@
 @import "tailwindcss";
-@plugin "@tailwindcss/typography";
 
-/* deine bisherigen Variablen & Basisstyles */
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------- Hintergrund: dunkler Blau/Lila-Gradient ---------- */
+.glass-gradient {
+  background:
+    radial-gradient(1200px 800px at 0% 0%, rgba(37, 99, 235, 0.6), transparent 70%),
+    radial-gradient(1200px 800px at 100% 0%, rgba(139, 92, 246, 0.6), transparent 70%),
+    linear-gradient(180deg, #1e293b 0%, #0f172a 100%) !important; 
+  min-height: 100vh;
+  color: #f8fafc; /* Standard-Text hell */
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ---------- Glas-Karten (hell, damit sie sich abheben) ---------- */
+.glass-card {
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+  backdrop-filter: blur(18px) saturate(160%);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #f1f5f9; /* Text auf Cards hell */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------- Formularfelder: dunkler Style ---------- */
+.glass-gradient input,
+.glass-gradient select,
+.glass-gradient textarea {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  outline: none;
+}
+.glass-gradient input::placeholder,
+.glass-gradient textarea::placeholder {
+  color: #94a3b8; /* slate-400 */
+}
+.glass-gradient input:focus,
+.glass-gradient select:focus,
+.glass-gradient textarea:focus {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.4);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------- Buttons ---------- */
+.btn-primary {
+  background: linear-gradient(180deg, #4f46e5, #3730a3);
+  color: #fff;
+  border-radius: 0.75rem;
+}
+.btn-primary:hover { filter: brightness(1.1); }
+
+.btn-green  { background: linear-gradient(180deg, #16a34a, #15803d); color:#fff; border-radius:.75rem; }
+.btn-blue   { background: linear-gradient(180deg, #2563eb, #1e40af); color:#fff; border-radius:.75rem; }
+.btn-ghost  { border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.1); border-radius:.75rem; }
+.btn-disabled { background: #475569; color: #94a3b8; cursor: not-allowed; }
+
+pre { white-space: pre-wrap; color: #f1f5f9; }
+
+/* ---------- Scrollbar ---------- */
+*::-webkit-scrollbar { height: 10px; width: 10px; }
+*::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 6px; }
+
+/* ---------- Überschriften & Texte ---------- */
+.glass-gradient h1, .glass-gradient h2, .glass-gradient h3,
+.glass-card h1, .glass-card h2, .glass-card h3 {
+  color: #f8fafc;
+}
+
+.glass-card label { color: #e2e8f0; }
+.glass-card p { color: #cbd5e1; }
+
+/* Vollfläche sicherstellen */
+html, body {
+  min-height: 100%;
 }

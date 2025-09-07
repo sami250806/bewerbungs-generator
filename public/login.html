@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Passwortschutz</title>
+  <style>
+    body {
+      background: #0f172a; /* dunkelblau */
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .box {
+      background: rgba(255,255,255,0.05);
+      padding: 2rem;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    input {
+      padding: 0.5rem;
+      margin-top: 1rem;
+      border-radius: 8px;
+      border: none;
+      width: 100%;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 8px;
+      background: #3b82f6;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #2563eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>🔒 Zugang geschützt</h2>
+    <p>Bitte Passwort eingeben:</p>
+    <input type="password" id="pw" placeholder="Passwort">
+    <button onclick="checkPw()">Login</button>
+    <p id="msg" style="color: #f87171; margin-top: 1rem;"></p>
+  </div>
+
+  <script>
+    function checkPw() {
+      const pw = document.getElementById("pw").value;
+      const correct = "zahra"; // 👉 hier dein Passwort ändern
+      if (pw === correct) {
+        sessionStorage.setItem("access", "granted");
+        window.location.href = "/"; // weiter zur Hauptseite
+      } else {
+        document.getElementById("msg").textContent = "Falsches Passwort!";
+      }
+    }
+
+    // Falls schon eingeloggt -> automatisch weiter
+    if (sessionStorage.getItem("access") === "granted") {
+      window.location.href = "/";
+    }
+  </script>
+</body>
+</html>
