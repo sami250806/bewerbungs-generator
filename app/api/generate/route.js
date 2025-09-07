@@ -332,6 +332,7 @@ export async function POST(req) {
     });
 
     const apiKey = process.env.OPENAI_API_KEY;
+    console.log("DEBUG API KEY:", apiKey ? "geladen" : "NICHT gefunden");
     if (!apiKey) {
       const text0 = localFallback({
         language: lang,
