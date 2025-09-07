@@ -16,7 +16,7 @@ function takeSingleVersion(raw) {
   return best.trim();
 }
 
-function buildGermanSalutation(contactRaw?: string) {
+function buildGermanSalutation(contactRaw) {
   const c = (contactRaw || "").trim();
   if (!c) return "Sehr geehrte Damen und Herren,";
   const low = c.toLowerCase();
@@ -24,12 +24,14 @@ function buildGermanSalutation(contactRaw?: string) {
   if (low.includes("herr")) return `Sehr geehrter ${c},`;
   return `Sehr geehrte Damen und Herren (${c}),`;
 }
-function buildEnglishSalutation(contactRaw?: string) {
+
+function buildEnglishSalutation(contactRaw) {
   const c = (contactRaw || "").trim();
   return `Dear ${c || "Hiring Team"},`;
 }
-function styleHint(style: string, lang: "de" | "en") {
-  const map: any = {
+
+function styleHint(style, lang) {
+  const map = {
     formal:      { en: "classic, respectful, complete sentences", de: "klassisch, respektvoll, vollständige Sätze" },
     modern:      { en: "modern, direct, clear value focus",        de: "modern, direkt, klarer Nutzenfokus" },
     friendly:    { en: "friendly, warm, yet professional",         de: "freundlich, warm, dennoch professionell" },
@@ -55,8 +57,8 @@ function headerBlock({
   phone,
   email,
   linkedin,
-}: any) {
-  const name = [firstName?.trim(), lastName?.trim()].filter(Boolean).join(" ");
+}) {
+  const name = [firstName && firstName.trim(), lastName && lastName.trim()].filter(Boolean).join(" ");
   const date = new Date().toLocaleDateString(language === "en" ? "en-GB" : "de-DE", {
     year: "numeric",
     month: "long",
@@ -66,21 +68,19 @@ function headerBlock({
   const phoneLabel = language === "en" ? "Phone" : "Telefon";
 
   const contactLine = [
-    phone?.trim() ? `${phoneLabel}: ${phone.trim()}` : null,
-    email?.trim() || null,
-    linkedin?.trim() || null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+    phone && phone.trim() ? `${phoneLabel}: ${phone.trim()}` : null,
+    email && email.trim() ? email.trim() : null,
+    linkedin && linkedin.trim() ? linkedin.trim() : null,
+  ].filter(Boolean).join(" · ");
 
   const composed = [
     name || "—",
-    applicantAddress?.trim() || null,
-    applicantLocation?.trim() || null,
+    applicantAddress && applicantAddress.trim() ? applicantAddress.trim() : null,
+    applicantLocation && applicantLocation.trim() ? applicantLocation.trim() : null,
     contactLine || null,
     "",
-    company?.trim() || null,
-    companyAddress?.trim() || null,
+    company && company.trim() ? company.trim() : null,
+    companyAddress && companyAddress.trim() ? companyAddress.trim() : null,
     "",
     `${dateLabel}: ${date}`,
   ].filter(Boolean);
@@ -89,7 +89,7 @@ function headerBlock({
 }
 
 /* ---------- Local Fallback ---------- */
-function localFallback(data: any) {
+function localFallback(data) {
   const {
     language = "en",
     style = "formal",
@@ -111,7 +111,7 @@ function localFallback(data: any) {
   } = data || {};
 
   const name = [firstName.trim(), lastName.trim()].filter(Boolean).join(" ");
-  const lang: "de" | "en" = language === "de" ? "de" : "en";
+  const lang = language === "de" ? "de" : "en";
   const sal = lang === "de" ? buildGermanSalutation(contact) : buildEnglishSalutation(contact);
 
   const head = header
@@ -131,8 +131,8 @@ function localFallback(data: any) {
 
   const exp_en = `In my previous roles, I gained the following experience: ${experience || "- (please add)"}`;
   const exp_de = `In meiner bisherigen Laufbahn konnte ich folgende Erfahrungen sammeln: ${experience || "- (bitte ergänzen)"}`;
-  const sk_en = `My core strengths include: ${skills || "- (please add)"}`;
-  const sk_de = `Zu meinen Stärken zählen: ${skills || "- (bitte ergänzen)"}`;
+  const sk_en  = `My core strengths include: ${skills || "- (please add)"}`;
+  const sk_de  = `Zu meinen Stärken zählen: ${skills || "- (bitte ergänzen)"}`;
 
   const outro_en = `I would be happy to discuss how I can support your team and add value.\n\nKind regards\n${name || "—"}`;
   const outro_de = `Gern erläutere ich Ihnen im Gespräch, wie ich Ihr Team zielgerichtet unterstütze.\n\nMit freundlichen Grüßen\n${name || "—"}`;
@@ -157,7 +157,7 @@ function buildSinglePrompt({
   length,
   jd,
   seed,
-}: any) {
+}) {
   const {
     firstName,
     lastName,
@@ -172,7 +172,7 @@ function buildSinglePrompt({
     linkedin,
   } = form;
 
-  const name = [firstName?.trim(), lastName?.trim()].filter(Boolean).join(" ");
+  const name = [firstName && firstName.trim(), lastName && lastName.trim()].filter(Boolean).join(" ");
   const jdTrim = (jd || "").slice(0, 1500);
   const jdBlock = jdTrim
     ? lang === "de"
@@ -255,7 +255,7 @@ ${seedLine}`.trim();
 }
 
 /* ---------- API ---------- */
-export async function POST(req: Request) {
+export async function POST(req) {
   try {
     const body = await req.json();
     const {
@@ -284,7 +284,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
-    const lang: "de" | "en" = language === "de" ? "de" : "en";
+    const lang = language === "de" ? "de" : "en";
     const styleInstruction = styleHint(style, lang);
     const salutation = lang === "de" ? buildGermanSalutation(contact) : buildEnglishSalutation(contact);
 
