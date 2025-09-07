@@ -1,5 +1,5 @@
+// app/page.tsx
 "use client";
-import type React from "react";
 import Link from "next/link";
 import { useState, useEffect, FormEvent, useMemo } from "react";
 
@@ -12,6 +12,7 @@ function dataURLtoUint8Array(dataURL: string): Uint8Array {
   for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
 }
+
 function getImageSize(dataUrl: string): Promise<{ width: number; height: number }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -20,9 +21,11 @@ function getImageSize(dataUrl: string): Promise<{ width: number; height: number 
     img.src = dataUrl;
   });
 }
+
 const pxToMm = (px: number) => (px * 25.4) / 96;
 const fullName = (first = "", last = "") =>
   [first.trim(), last.trim()].filter(Boolean).join(" ").trim();
+
 const parseName = (name: string) => {
   const parts = name.trim().split(/\s+/);
   if (parts.length === 0) return { firstName: "", lastName: "" };
@@ -41,35 +44,30 @@ type FormState = {
   name: string;
   firstName?: string;
   lastName?: string;
-
   phone: string;
   email: string;
   linkedin: string;
-
   jobTitle: string;
   company: string;
   contact: string;
-
   experience: string;
   skills: string;
-
   style: LetterStyle;
   language: Language;
   length: LengthTarget;
-
   header: boolean;
   applicantAddress: string;
   applicantLocation: string;
   companyAddress: string;
-
-  bulletPoints: boolean; // bleibt in State für Abwärtskompatibilität, wird aber ignoriert
+  bulletPoints: boolean;
 };
 
 /* ===================== i18n ===================== */
 const i18n = {
   en: {
     appTitle: "Cover Letter Generator",
-    intro: "Write a convincing cover letter — choose language & style, review the text, then download as PDF/DOCX.",
+    intro:
+      "Write a convincing cover letter — choose language & style, review the text, then download as PDF/DOCX.",
     labels: {
       language: "Language",
       style: "Cover letter style",
@@ -123,12 +121,7 @@ const i18n = {
       academic: "Academic",
       persuasive: "Persuasive",
     },
-    // Wortzahlen entfernt
-    lengthOptions: {
-      short: "Short",
-      medium: "Medium",
-      long: "Long",
-    },
+    lengthOptions: { short: "Short", medium: "Medium", long: "Long" },
     buttons: {
       generate: "Generate cover letter",
       generating: "Generating…",
@@ -146,7 +139,8 @@ const i18n = {
   },
   de: {
     appTitle: "Bewerbungs-Generator",
-    intro: "Schreibe ein überzeugendes Anschreiben — Sprache & Stil wählen, Text prüfen, dann als PDF/DOCX herunterladen.",
+    intro:
+      "Schreibe ein überzeugendes Anschreiben — Sprache & Stil wählen, Text prüfen, dann als PDF/DOCX herunterladen.",
     labels: {
       language: "Sprache",
       style: "Stil des Anschreibens",
@@ -200,12 +194,7 @@ const i18n = {
       academic: "Akademisch",
       persuasive: "Überzeugend",
     },
-    // Wortzahlen entfernt
-    lengthOptions: {
-      short: "Kurz",
-      medium: "Mittel",
-      long: "Lang",
-    },
+    lengthOptions: { short: "Kurz", medium: "Mittel", long: "Lang" },
     buttons: {
       generate: "Anschreiben generieren",
       generating: "Generiere…",
@@ -249,6 +238,16 @@ const DEFAULT_FORM: FormState = {
 
 /* ===================== Component ===================== */
 export default function Home() {
+  // Login-Redirect nur als Effekt – keine bedingte Hooks-Ausführung
+  useEffect(() => {
+    try {
+      const ok = localStorage.getItem("access") === "granted";
+      const onLogin = typeof window !== "undefined" && window.location.pathname.startsWith("/login");
+      if (!ok && !onLogin) window.location.replace("/login");
+    } catch {}
+  }, []);
+
+  // --- ab hier: alle Hooks laufen immer ---
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -286,6 +285,7 @@ export default function Home() {
       if (savedPhoto) setPhotoDataUrl(savedPhoto);
     } catch {}
   }, []);
+
   useEffect(() => {
     try { localStorage.setItem("bg_form", JSON.stringify(form)); } catch {}
   }, [form]);
@@ -351,11 +351,13 @@ export default function Home() {
     );
     const dateLabel = i18n[f.language as Language].dateLabel;
     const phoneLabel = i18n[f.language as Language].phoneLabel;
+
     const contacts = [
       f.phone?.trim() ? `${phoneLabel}: ${f.phone.trim()}` : null,
       f.email?.trim() || null,
       f.linkedin?.trim() || null,
     ].filter(Boolean).join(" · ");
+
     const lines = [
       fullName(parsed.firstName, parsed.lastName) || "—",
       f.applicantAddress?.trim(),
@@ -367,16 +369,12 @@ export default function Home() {
       "",
       `${dateLabel}: ${date}`,
     ].filter(Boolean) as string[];
+
     return lines.join("\n");
   };
 
   const bulletize = (text: string) =>
-    text
-      .split(/[,;\n]+/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((s) => `• ${s}`)
-      .join("\n");
+    text.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean).map((s) => `• ${s}`).join("\n");
 
   /* Letter builder */
   const buildLetter = (f: FormState) => {
@@ -399,7 +397,6 @@ export default function Home() {
           } ${f.company}`
         : "";
 
-    // Bulletpoints dauerhaft aus
     const useBullets = false;
     const expBlock = useBullets ? (expRaw ? bulletize(expRaw) : "-") : (expRaw || "-");
     const skillsBlock = useBullets ? (skillsRaw ? bulletize(skillsRaw) : "-") : (skillsRaw || "-");
@@ -450,8 +447,7 @@ export default function Home() {
 
   const runGenerate = async () => {
     setErrorMsg(null);
-    const hasName = (form.name || "").trim().length > 0
-      || (form.firstName || form.lastName);
+    const hasName = (form.name || "").trim().length > 0 || (form.firstName || form.lastName);
     if (!hasName || !form.jobTitle.trim() || !form.experience.trim() || !form.skills.trim()) {
       setTouched((t) => ({ ...t, name: true, jobTitle: true, experience: true, skills: true }));
       return;
@@ -501,7 +497,7 @@ export default function Home() {
   const expWords = useMemo(() => countWords(form.experience), [form.experience]);
   const skillsWords = useMemo(() => countWords(form.skills), [form.skills]);
 
-  /* PDF Export – single declaration of cursorY */
+  /* PDF Export */
   async function exportPDF() {
     if (!result) return;
     const { default: jsPDF } = await import("jspdf");
@@ -531,10 +527,6 @@ export default function Home() {
 
         const photoX = pageW - marginR - targetWmm;
         const photoY = cursorY;
-
-        doc.setDrawColor(200, 200, 200);
-        doc.setLineWidth(0.4);
-        doc.rect(photoX - 1, photoY - 1, targetWmm + 2, targetHmm + 2);
 
         const format = photoDataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
         doc.addImage(photoDataUrl, format as any, photoX, photoY, targetWmm, targetHmm);
@@ -589,8 +581,7 @@ export default function Home() {
           form.linkedin || null,
         ].filter(Boolean).join(" · ");
         const lines = [contactLine, form.applicantAddress || "", form.applicantLocation || ""]
-          .filter(Boolean)
-          .join(" · ");
+          .filter(Boolean).join(" · ");
 
         let y = cursorY + 10;
         doc.splitTextToSize(lines, usableW).forEach((c: string) => {
@@ -641,19 +632,24 @@ export default function Home() {
       } catch {}
     }
 
-    const nameRun = new TextRun({ text: form.name || fullName(form.firstName, form.lastName) || "—", bold: true });
+    const nameRun = new TextRun({
+      text: form.name || fullName(form.firstName, form.lastName) || "—",
+      bold: true,
+    });
+
     const contactRuns = [
       nameRun,
       form.phone ? new TextRun({ text: `\n${i18n[form.language].phoneLabel}: ${form.phone}` }) : null,
       form.email ? new TextRun({ text: `\n${form.email}` }) : null,
       form.linkedin ? new TextRun({ text: `\n${form.linkedin}` }) : null,
     ].filter(Boolean) as any[];
+
     children.push(new Paragraph({ children: contactRuns }));
     children.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
     const paragraphs = result.trim().split(/\n{2,}/).map((block: string) => {
       const lines = block.split("\n");
-      const runs = lines.map((line, i) => i === 0 ? new TextRun(line) : new TextRun({ text: line, break: 1 }));
+      const runs = lines.map((line, i) => (i === 0 ? new TextRun(line) : new TextRun({ text: line, break: 1 })));
       return new Paragraph({ children: runs });
     });
 
@@ -683,7 +679,9 @@ export default function Home() {
       <div dir={form.language === "ar" ? "rtl" : "ltr"} className="glass-gradient text-slate-900">
         <main className="mx-auto max-w-5xl px-4 py-10">
           <header className="mb-6">
-            <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow">{t.appTitle}</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight text-white drop-shadow">
+              {t.appTitle}
+            </h1>
             <p className="mt-1 text-white/80">{t.intro}</p>
           </header>
 
@@ -693,7 +691,9 @@ export default function Home() {
                 {/* Top controls */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block font-medium text-white" htmlFor="language">{t.labels.language}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="language">
+                      {t.labels.language}
+                    </label>
                     <select
                       id="language"
                       value={form.language}
@@ -711,7 +711,9 @@ export default function Home() {
                     </select>
                   </div>
                   <div>
-                    <label className="mb-1 block font-medium text-white" htmlFor="style">{t.labels.style}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="style">
+                      {t.labels.style}
+                    </label>
                     <select
                       id="style"
                       value={form.style}
@@ -735,7 +737,9 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div className="sm:col-span-1">
-                    <label className="mb-1 block font-medium text-white" htmlFor="length">{t.labels.length}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="length">
+                      {t.labels.length}
+                    </label>
                     <select
                       id="length"
                       value={form.length}
@@ -749,7 +753,6 @@ export default function Home() {
                     </select>
                   </div>
 
-                  {/* Bullet-Points-Option entfernt */}
                   <div className="hidden" />
 
                   <label className="flex items-center gap-3 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-white">
@@ -767,7 +770,9 @@ export default function Home() {
                 {/* Name + Position */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block font-medium text-white" htmlFor="name">{t.labels.name}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="name">
+                      {t.labels.name}
+                    </label>
                     <input
                       id="name"
                       type="text"
@@ -782,7 +787,9 @@ export default function Home() {
                     )}
                   </div>
                   <div>
-                    <label className="mb-1 block font-medium text-white" htmlFor="jobTitle">{t.labels.jobTitle}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="jobTitle">
+                      {t.labels.jobTitle}
+                    </label>
                     <input
                       id="jobTitle"
                       type="text"
@@ -801,7 +808,9 @@ export default function Home() {
                 {/* Company + Contact */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1 block font-medium text-white" htmlFor="company">{t.labels.company}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="company">
+                      {t.labels.company}
+                    </label>
                     <input
                       id="company"
                       type="text"
@@ -813,7 +822,9 @@ export default function Home() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block font-medium text-white" htmlFor="contact">{t.labels.contact}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="contact">
+                      {t.labels.contact}
+                    </label>
                     <input
                       id="contact"
                       type="text"
@@ -829,7 +840,9 @@ export default function Home() {
                 {/* Contact details row */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                   <div>
-                    <label className="mb-1 block font-medium text-white" htmlFor="phone">{t.labels.phone}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="phone">
+                      {t.labels.phone}
+                    </label>
                     <input
                       id="phone"
                       type="tel"
@@ -841,7 +854,9 @@ export default function Home() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block font-medium text-white" htmlFor="email">{t.labels.email}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="email">
+                      {t.labels.email}
+                    </label>
                     <input
                       id="email"
                       type="email"
@@ -853,7 +868,9 @@ export default function Home() {
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block font-medium text-white" htmlFor="linkedin">{t.labels.linkedin}</label>
+                    <label className="mb-1 block font-medium text-white" htmlFor="linkedin">
+                      {t.labels.linkedin}
+                    </label>
                     <input
                       id="linkedin"
                       type="url"
@@ -919,7 +936,7 @@ export default function Home() {
                   </div>
                 )}
 
-                {/* Foto – jetzt immer sichtbar */}
+                {/* Foto */}
                 <div className="rounded-xl border border-white/15 bg-white/5 p-4 backdrop-blur">
                   <div>
                     <label className="mb-1 block font-medium text-white" htmlFor="photo">
@@ -956,7 +973,9 @@ export default function Home() {
 
                 {/* Experience */}
                 <div>
-                  <label className="mb-1 block font-medium text-white" htmlFor="experience">{t.labels.experience}</label>
+                  <label className="mb-1 block font-medium text-white" htmlFor="experience">
+                    {t.labels.experience}
+                  </label>
                   <textarea
                     id="experience"
                     rows={6}
@@ -972,7 +991,9 @@ export default function Home() {
 
                   <div className="mt-1 flex items-center justify-between text-xs">
                     <span className="text-white/80">{t.counters.chars}: {form.experience.length}</span>
-                    <span className={statColor(expWords, LIMITS.experience)}>{t.counters.words}: {expWords} <span className="opacity-70">(Target 40–180)</span></span>
+                    <span className={statColor(expWords, LIMITS.experience)}>
+                      {t.counters.words}: {expWords} <span className="opacity-70">(Target 40–180)</span>
+                    </span>
                   </div>
                   <div className="mt-1 h-2 w-full rounded-full bg-white/15">
                     <div className={`h-full rounded-full transition-all ${barColor(expWords, LIMITS.experience)}`} style={{ width: `${percentToGoal(expWords, LIMITS.experience)}%` }} />
@@ -981,7 +1002,9 @@ export default function Home() {
 
                 {/* Skills */}
                 <div>
-                  <label className="mb-1 block font-medium text-white" htmlFor="skills">{t.labels.skills}</label>
+                  <label className="mb-1 block font-medium text-white" htmlFor="skills">
+                    {t.labels.skills}
+                  </label>
                   <textarea
                     id="skills"
                     rows={4}
@@ -1006,16 +1029,34 @@ export default function Home() {
 
                 {/* Buttons */}
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <button type="submit" disabled={loading} className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${loading ? "bg-white/30 cursor-wait" : "bg-indigo-600 hover:bg-indigo-500"}`}>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${loading ? "bg-white/30 cursor-wait" : "bg-indigo-600 hover:bg-indigo-500"}`}
+                  >
                     {loading ? t.buttons.generating : t.buttons.generate}
                   </button>
-                  <button type="button" onClick={exportPDF} disabled={!result} className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${result ? "bg-green-600 hover:bg-green-500" : "bg-white/30 cursor-not-allowed"}`}>
+                  <button
+                    type="button"
+                    onClick={exportPDF}
+                    disabled={!result}
+                    className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${result ? "bg-green-600 hover:bg-green-500" : "bg-white/30 cursor-not-allowed"}`}
+                  >
                     {t.buttons.pdf}
                   </button>
-                  <button type="button" onClick={exportDOCX} disabled={!result} className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${result ? "bg-blue-600 hover:bg-blue-500" : "bg-white/30 cursor-not-allowed"}`}>
+                  <button
+                    type="button"
+                    onClick={exportDOCX}
+                    disabled={!result}
+                    className={`rounded-xl px-4 py-2 font-medium text-white sm:flex-1 ${result ? "bg-blue-600 hover:bg-blue-500" : "bg-white/30 cursor-not-allowed"}`}
+                  >
                     {t.buttons.docx}
                   </button>
-                  <button type="button" onClick={handleReset} className="rounded-xl border border-white/25 px-4 py-2 font-medium text-white/90 backdrop-blur hover:bg-white/10 sm:flex-1">
+                  <button
+                    type="button"
+                    onClick={handleReset}
+                    className="rounded-xl border border-white/25 px-4 py-2 font-medium text-white/90 backdrop-blur hover:bg-white/10 sm:flex-1"
+                  >
                     {t.buttons.reset}
                   </button>
                 </div>
@@ -1087,7 +1128,7 @@ export default function Home() {
 
           {errorMsg && <p className="mt-3 text-sm text-amber-300">{errorMsg}</p>}
 
-          {/* ===== Footer mit Impressum / Datenschutz ===== */}
+          {/* ===== Footer ===== */}
           <footer className="mt-10 border-t border-white/10 pt-6 text-center">
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm">
               <Link href="/impressum" className="text-white/80 hover:text-white underline-offset-4 hover:underline">

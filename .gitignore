@@ -43,3 +43,6 @@ next-env.d.ts
 node_modules
 .next
 out
+
+# Local Netlify folder
+.netlify
