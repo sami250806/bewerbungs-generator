@@ -4,7 +4,7 @@ import OpenAI from "openai";
 /* ---------- Utils ---------- */
 const countWords = (txt = "") => (txt.trim().match(/\S+/g) || []).length;
 
-function takeSingleVersion(raw: string) {
+function takeSingleVersion(raw) {
   if (!raw) return "";
   const parts = raw
     .split(/\n-{3,}\n|^#+\s.*\n|^\s*={3,}\s*$/m)
