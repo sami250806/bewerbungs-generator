@@ -149,17 +149,8 @@ function localFallback(data) {
 /* ---------- Prompt ---------- */
 function buildSinglePrompt({ lang, styleInstruction, salutation, headerWanted, form, length, jd, seed }) {
   const {
-    firstName,
-    lastName,
-    jobTitle,
-    company,
-    contact,
-    experience,
-    skills,
-    applicantLocation,
-    phone,
-    email,
-    linkedin,
+    firstName, lastName, jobTitle, company, contact, experience, skills,
+    applicantLocation, phone, email, linkedin,
   } = form;
 
   const name = [firstName && firstName.trim(), lastName && lastName.trim()].filter(Boolean).join(" ");
@@ -210,7 +201,7 @@ function buildSinglePrompt({ lang, styleInstruction, salutation, headerWanted, f
 - City (for date line): ${applicantLocation || "(optional)"}
 - Phone: ${phone || "(optional)"}
 - Email: ${email || "(optional)"}
-- LinkedIn: ${linkedin || "(optional)"}`;
+- LinkedIn: ${linkedin || "(optional)"};`;
 
   const noBullets = lang === "de" ? "Keine Aufzählungspunkte verwenden." : "Do not use bullet points.";
   const seedLine = seed ? (lang === "de" ? `Seed: ${seed}` : `Seed: ${seed}`) : "";
@@ -253,25 +244,11 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const {
-      firstName = "",
-      lastName = "",
-      phone = "",
-      email = "",
-      linkedin = "",
-      jobTitle = "",
-      company = "",
-      contact = "",
-      experience = "",
-      skills = "",
-      style = "formal",
-      language = "en",
-      length = "medium",
-      header = false,
-      applicantAddress = "",
-      applicantLocation = "",
-      companyAddress = "",
-      jd = "",
-      variation,
+      firstName = "", lastName = "", phone = "", email = "", linkedin = "",
+      jobTitle = "", company = "", contact = "", experience = "", skills = "",
+      style = "formal", language = "en", length = "medium", header = false,
+      applicantAddress = "", applicantLocation = "", companyAddress = "",
+      jd = "", variation,
     } = body || {};
 
     if (!firstName || !lastName || !jobTitle || !experience || !skills) {
@@ -284,16 +261,8 @@ export async function POST(req) {
 
     const headerWanted = header
       ? headerBlock({
-          language: lang,
-          firstName,
-          lastName,
-          company,
-          applicantAddress,
-          applicantLocation,
-          companyAddress,
-          phone,
-          email,
-          linkedin,
+          language: lang, firstName, lastName, company,
+          applicantAddress, applicantLocation, companyAddress, phone, email, linkedin,
         })
       : "";
 
@@ -307,19 +276,7 @@ export async function POST(req) {
       styleInstruction,
       salutation,
       headerWanted,
-      form: {
-        firstName,
-        lastName,
-        jobTitle,
-        company,
-        contact,
-        experience,
-        skills,
-        applicantLocation,
-        phone,
-        email,
-        linkedin,
-      },
+      form: { firstName, lastName, jobTitle, company, contact, experience, skills, applicantLocation, phone, email, linkedin },
       length,
       jd,
       seed: variation || `seed:${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
@@ -327,42 +284,25 @@ export async function POST(req) {
 
     console.log("DEBUG prompt len:", prompt.length);
 
-    // Wenn kein Key: lokaler Fallback
+    // Kein Key → Fallback
     if (!apiKey) {
       const text0 = localFallback({
-        language: lang,
-        style,
-        firstName,
-        lastName,
-        jobTitle,
-        company,
-        contact,
-        experience,
-        skills,
-        length,
-        header,
-        applicantAddress,
-        applicantLocation,
-        companyAddress,
-        phone,
-        email,
-        linkedin,
+        language: lang, style, firstName, lastName, jobTitle, company, contact,
+        experience, skills, length, header, applicantAddress, applicantLocation,
+        companyAddress, phone, email, linkedin,
       });
       const one = takeSingleVersion(text0);
-      return NextResponse.json(
-        { result: one, meta: { words: countWords(one) }, source: "fallback" },
-        { status: 200 }
-      );
+      return NextResponse.json({ result: one, meta: { words: countWords(one) }, source: "fallback" }, { status: 200 });
     }
 
-    // OpenAI Call mit Timeout + schlankem Fehler-Log
+    // OpenAI Call (SDK v4) + 30s Timeout
     const openai = new OpenAI({ apiKey });
     const controller = new AbortController();
-    const t = setTimeout(() => controller.abort(), 30000); // 30s Timeout
+    const t = setTimeout(() => controller.abort(), 30000);
 
-    let choices;
+    let resp;
     try {
-      const resp = await openai.chat.completions.create(
+      resp = await openai.chat.completions.create(
         {
           model: "gpt-4o-mini",
           temperature: 0.85,
@@ -376,56 +316,32 @@ export async function POST(req) {
         },
         { signal: controller.signal }
       );
-      choices = resp.choices;
     } catch (e) {
-      // Nur das Wesentliche loggen
-      console.error("OpenAI request failed", {
-        name: e?.name,
-        status: e?.status,
-        message: e?.message,
-      });
+      console.error("OpenAI request failed", { name: e?.name, status: e?.status, message: e?.message });
       throw e;
     } finally {
       clearTimeout(t);
     }
 
-    const text = takeSingleVersion(choices?.[0]?.message?.content || "");
+    // Text extrahieren (robust)
+    let text = resp?.choices?.[0]?.message?.content || "";
+    if (!text) {
+      text = localFallback({
+        language: lang, style, firstName, lastName, jobTitle, company, contact,
+        experience, skills, length, header, applicantAddress, applicantLocation,
+        companyAddress, phone, email, linkedin,
+      });
+    }
+    text = takeSingleVersion(text);
 
     return NextResponse.json(
-      {
-        result: text || localFallback({
-          language: lang,
-          style,
-          firstName,
-          lastName,
-          jobTitle,
-          company,
-          contact,
-          experience,
-          skills,
-          length,
-          header,
-          applicantAddress,
-          applicantLocation,
-          companyAddress,
-          phone,
-          email,
-          linkedin,
-        }),
-        meta: { words: countWords(text) },
-        source: text ? "openai" : "fallback_missing_text",
-      },
+      { result: text, meta: { words: countWords(text) }, source: resp ? "openai" : "fallback_missing_text" },
       { status: 200 }
     );
   } catch (err) {
-    // => Dies siehst du in Netlify → Functions → Logs
-    console.error("Handler error:", {
-      name: err?.name,
-      status: err?.status,
-      message: err?.message,
-    });
+    console.error("Handler error:", { name: err?.name, status: err?.status, message: err?.message });
 
-    // Sichere Rückfallebene (lokal generierter Text)
+    // Sichere Rückfallebene
     try {
       const body = await req.json().catch(() => ({}));
       let text = localFallback({
@@ -448,10 +364,7 @@ export async function POST(req) {
         linkedin: body.linkedin || "",
       });
       text = takeSingleVersion(text);
-      return NextResponse.json(
-        { result: text, meta: { words: countWords(text) }, source: "fallback_error" },
-        { status: 200 }
-      );
+      return NextResponse.json({ result: text, meta: { words: countWords(text) }, source: "fallback_error" }, { status: 200 });
     } catch {
       return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
