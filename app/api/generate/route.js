@@ -148,16 +148,7 @@ function localFallback(data) {
 }
 
 /* ---------- Prompt ---------- */
-function buildSinglePrompt({
-  lang,
-  styleInstruction,
-  salutation,
-  headerWanted,
-  form,
-  length,
-  jd,
-  seed,
-}) {
+function buildSinglePrompt({ lang, styleInstruction, salutation, headerWanted, form, length, jd, seed }) {
   const {
     firstName,
     lastName,
@@ -335,6 +326,8 @@ export async function POST(req) {
       seed: variation || `seed:${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     });
 
+    console.log("Prompt an OpenAI:", prompt);
+
     if (!apiKey) {
       const text0 = localFallback({
         language: lang,
@@ -376,6 +369,8 @@ export async function POST(req) {
       ],
     });
 
+    console.log("OpenAI Antwort:", JSON.stringify(choices, null, 2));
+
     let text = takeSingleVersion(choices?.[0]?.message?.content || "");
     if (!text) {
       text = localFallback({
@@ -404,10 +399,10 @@ export async function POST(req) {
       { result: text, meta: { words: countWords(text) }, source: "openai" },
       { status: 200 }
     );
- } catch (err) {
-  console.error("OpenAI error:", err); // Debug-Log für Netlify
-  try {
-    const body = await req.json().catch(() => ({}));
+  } catch (err) {
+    console.error("OpenAI error:", err);
+    try {
+      const body = await req.json().catch(() => ({}));
       let text = localFallback({
         language: body.language === "de" ? "de" : "en",
         style: body.style || "formal",
