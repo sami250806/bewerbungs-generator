@@ -256,6 +256,10 @@ ${seedLine}`.trim();
 
 /* ---------- API ---------- */
 export async function POST(req) {
+  console.log("=== ENTER /api/generate ===");   // Debug
+  const apiKey = process.env.OPENAI_API_KEY;   // Debug
+  console.log("DEBUG API KEY:", apiKey ? "geladen" : "NICHT gefunden"); // Debug
+
   try {
     const body = await req.json();
     const {
