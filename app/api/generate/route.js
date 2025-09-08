@@ -404,9 +404,10 @@ export async function POST(req) {
       { result: text, meta: { words: countWords(text) }, source: "openai" },
       { status: 200 }
     );
-  } catch (err) {
-    try {
-      const body = await req.json().catch(() => ({}));
+ } catch (err) {
+  console.error("OpenAI error:", err); // Debug-Log für Netlify
+  try {
+    const body = await req.json().catch(() => ({}));
       let text = localFallback({
         language: body.language === "de" ? "de" : "en",
         style: body.style || "formal",
