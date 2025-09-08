@@ -24,7 +24,6 @@ function buildGermanSalutation(contactRaw) {
   if (low.includes("herr")) return `Sehr geehrter ${c},`;
   return `Sehr geehrte Damen und Herren (${c}),`;
 }
-
 function buildEnglishSalutation(contactRaw) {
   const c = (contactRaw || "").trim();
   return `Dear ${c || "Hiring Team"},`;
@@ -326,8 +325,9 @@ export async function POST(req) {
       seed: variation || `seed:${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     });
 
-    console.log("Prompt an OpenAI:", prompt);
+    console.log("DEBUG prompt len:", prompt.length);
 
+    // Wenn kein Key: lokaler Fallback
     if (!apiKey) {
       const text0 = localFallback({
         language: lang,
@@ -355,52 +355,77 @@ export async function POST(req) {
       );
     }
 
+    // OpenAI Call mit Timeout + schlankem Fehler-Log
     const openai = new OpenAI({ apiKey });
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 30000); // 30s Timeout
 
-    const { choices } = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      temperature: 0.85,
-      top_p: 0.95,
-      presence_penalty: 0.3,
-      frequency_penalty: 0.2,
-      messages: [
-        { role: "system", content: systemMsg },
-        { role: "user", content: prompt },
-      ],
-    });
-
-    console.log("OpenAI Antwort:", JSON.stringify(choices, null, 2));
-
-    let text = takeSingleVersion(choices?.[0]?.message?.content || "");
-    if (!text) {
-      text = localFallback({
-        language: lang,
-        style,
-        firstName,
-        lastName,
-        jobTitle,
-        company,
-        contact,
-        experience,
-        skills,
-        length,
-        header,
-        applicantAddress,
-        applicantLocation,
-        companyAddress,
-        phone,
-        email,
-        linkedin,
+    let choices;
+    try {
+      const resp = await openai.chat.completions.create(
+        {
+          model: "gpt-4o-mini",
+          temperature: 0.85,
+          top_p: 0.95,
+          presence_penalty: 0.3,
+          frequency_penalty: 0.2,
+          messages: [
+            { role: "system", content: systemMsg },
+            { role: "user", content: prompt },
+          ],
+        },
+        { signal: controller.signal }
+      );
+      choices = resp.choices;
+    } catch (e) {
+      // Nur das Wesentliche loggen
+      console.error("OpenAI request failed", {
+        name: e?.name,
+        status: e?.status,
+        message: e?.message,
       });
-      text = takeSingleVersion(text);
+      throw e;
+    } finally {
+      clearTimeout(t);
     }
 
+    const text = takeSingleVersion(choices?.[0]?.message?.content || "");
+
     return NextResponse.json(
-      { result: text, meta: { words: countWords(text) }, source: "openai" },
+      {
+        result: text || localFallback({
+          language: lang,
+          style,
+          firstName,
+          lastName,
+          jobTitle,
+          company,
+          contact,
+          experience,
+          skills,
+          length,
+          header,
+          applicantAddress,
+          applicantLocation,
+          companyAddress,
+          phone,
+          email,
+          linkedin,
+        }),
+        meta: { words: countWords(text) },
+        source: text ? "openai" : "fallback_missing_text",
+      },
       { status: 200 }
     );
   } catch (err) {
-    console.error("OpenAI error:", err);
+    // => Dies siehst du in Netlify → Functions → Logs
+    console.error("Handler error:", {
+      name: err?.name,
+      status: err?.status,
+      message: err?.message,
+    });
+
+    // Sichere Rückfallebene (lokal generierter Text)
     try {
       const body = await req.json().catch(() => ({}));
       let text = localFallback({
