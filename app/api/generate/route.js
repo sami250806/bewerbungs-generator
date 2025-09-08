@@ -256,9 +256,9 @@ ${seedLine}`.trim();
 
 /* ---------- API ---------- */
 export async function POST(req) {
-  console.log("=== ENTER /api/generate ===");   // Debug
-  const apiKey = process.env.OPENAI_API_KEY;   // Debug
-  console.log("DEBUG API KEY:", apiKey ? "geladen" : "NICHT gefunden"); // Debug
+  console.log("=== ENTER /api/generate ===");
+  const apiKey = process.env.OPENAI_API_KEY;
+  console.log("DEBUG API KEY:", apiKey ? "geladen" : "NICHT gefunden");
 
   try {
     const body = await req.json();
@@ -335,8 +335,6 @@ export async function POST(req) {
       seed: variation || `seed:${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     });
 
-    const apiKey = process.env.OPENAI_API_KEY;
-    console.log("DEBUG API KEY:", apiKey ? "geladen" : "NICHT gefunden");
     if (!apiKey) {
       const text0 = localFallback({
         language: lang,
